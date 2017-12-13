@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "WheeledVehicle.h"
+#include "Runtime/Engine/Classes/Components/SceneCaptureComponent2D.h"
+#include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"
 #include "DFLWheeledVehicle.generated.h"
 
 /**
@@ -29,7 +31,10 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+public:
+	USceneCaptureComponent2D *Camera;
+	UTextureRenderTarget2D *RenderTarget;
+	UTexture2D *Texture2D;
 	
 };
 
