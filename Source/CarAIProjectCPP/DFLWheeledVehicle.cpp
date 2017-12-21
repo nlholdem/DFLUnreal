@@ -10,16 +10,8 @@ ADFLWheeledVehicle::ADFLWheeledVehicle()
 {
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	RootComponent = CreateDefaultSubobject<USphereComponent>(TEXT("Root"));
-	Camera = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Camera"));
-	ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RenderTargetAsset(TEXT("/Game/Textures/CameraInput"));
-	//here you need to have prepared MyLittleRenderTarget asset, type RenderTarget2D. You can have one for many actors, 
-	//it is duplicated. What is not resolved by me: i don't know if it is stable solution or it will make crash after many calls
-
-	RenderTarget = DuplicateObject(RenderTargetAsset.Object, NULL);
-	RenderTarget->InitAutoFormat(1024, 1024);
-	Camera->TextureTarget = RenderTarget;
-
+	ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RenderTargetAsset(TEXT("/Game/Textures/CameraFeed"));
+	RenderTarget = RenderTargetAsset.Object;
 	UE_LOG(LogTemp, Warning, TEXT("Constructing DFL_Vehicle!!"));
 
 }
@@ -27,15 +19,32 @@ ADFLWheeledVehicle::ADFLWheeledVehicle()
 // Called when the game starts or when spawned
 void ADFLWheeledVehicle::BeginPlay()
 {
+	float avgRed, avgGreen, avgBlue;
+	avgRed = avgGreen = avgBlue = 0.0;
+
 	Super::BeginPlay();
 
-	Camera->TextureTarget = RenderTarget;
+//	Camera->TextureTarget = RenderTarget;
 
 	int X = RenderTarget->GetSurfaceHeight();
 	int Y = RenderTarget->GetSurfaceWidth();
 	GLog->Logf(TEXT("Size: %d %d"), X, Y);
 	Texture2D = RenderTarget->ConstructTexture2D(this, FString("Tex2D"), EObjectFlags::RF_NoFlags);
-	//FTextureRenderTargetResource *Resource = RenderTarget->GetRenderTargetResource();
+
+}
+
+// Called every frame
+void ADFLWheeledVehicle::Tick(float DeltaTime)
+{
+	float avgRed, avgGreen, avgBlue;
+	avgRed = avgGreen = avgBlue = 0.0;
+
+	Super::Tick(DeltaTime);
+
+	//unfortunately we seem to need to construct the texture per frame - need to investigate if there 
+	// are more efficients ways round this. 
+	Texture2D = RenderTarget->ConstructTexture2D(this, FString("Tex2D"), EObjectFlags::RF_NoFlags);
+	Texture2D->UpdateResource();
 	int xx = Texture2D->GetSizeX();
 	int yy = Texture2D->GetSizeY();
 	GLog->Logf(TEXT("Texture size: %d %d"), xx, yy);
@@ -43,19 +52,16 @@ void ADFLWheeledVehicle::BeginPlay()
 	FTexturePlatformData *Data = Texture2D->PlatformData;
 
 	EPixelFormat Format = Data->PixelFormat;
-	GLog->Logf(TEXT("Pixel format: %d"), (uint8)(Format));
 	//format of pixel is PFloatRGBA
 
 	int size = Data->Mips[0].BulkData.GetElementSize();
 	int N = Data->Mips[0].BulkData.GetElementCount();
-	GLog->Logf(TEXT("Number of elements: %d, size of one element: %d"), N, size);
-	//i've got 1 byte size of element
 
 	const void *Table = Data->Mips[0].BulkData.LockReadOnly();
 	Data->Mips[0].BulkData.Unlock();
 
 	const uint16 *Tab2 = StaticCast<const uint16*>(Table);
-	//ok, quick calculation. I get 8*1024*1024 bytes from 1024*1024 pixels, so one pixel got 8 bytes of data. Format is RGBA, so you can figure it yourself :)
+	//Quick sanity check: show the avg pixel colour:
 	for (int i = 0; i<xx; i++)
 		for (int j = 0; j < yy; j++) {
 			int k = 4 * (i*yy + j);
@@ -63,15 +69,12 @@ void ADFLWheeledVehicle::BeginPlay()
 			int G = Tab2[k + 1];
 			int B = Tab2[k + 2];
 			int A = Tab2[k + 3];
+			avgRed += (float)R / (256.0 * (float)xx * (float)yy);
+			avgGreen += (float)G / (256.0 * (float)xx * (float)yy);
+			avgBlue += (float)B / (256.0 * (float)xx * (float)yy);
 		}
+	GLog->Logf(TEXT("avgRed: %f avgGreen: %f avgBlue: %f "), avgRed, avgGreen, avgBlue);
 
-
-}
-
-// Called every frame
-void ADFLWheeledVehicle::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
 }
 

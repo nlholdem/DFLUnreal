@@ -32,7 +32,6 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
-	USceneCaptureComponent2D *Camera;
 	UTextureRenderTarget2D *RenderTarget;
 	UTexture2D *Texture2D;
 	
