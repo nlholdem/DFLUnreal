@@ -6,6 +6,7 @@
 #include "WheeledVehicle.h"
 #include "Runtime/Engine/Classes/Components/SceneCaptureComponent2D.h"
 #include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"
+#include "deep_feedback_learning/deep_feedback_learning.h"
 #include "DFLWheeledVehicle.generated.h"
 
 /**
@@ -35,5 +36,7 @@ public:
 	UTextureRenderTarget2D *RenderTarget;
 	UTexture2D *Texture2D;
 	
+protected:
+	DeepFeedbackLearning *deep_fbl;
 };
 

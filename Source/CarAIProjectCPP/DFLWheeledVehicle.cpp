@@ -8,11 +8,20 @@
 
 ADFLWheeledVehicle::ADFLWheeledVehicle()
 {
+
+
+	int nFiltersInput = 10;
+	int nFiltersHidden = 10;
+	int nNeuronsHidden[] = { 10,10 };
+
 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	ConstructorHelpers::FObjectFinder<UTextureRenderTarget2D> RenderTargetAsset(TEXT("/Game/Textures/CameraFeed"));
 	RenderTarget = RenderTargetAsset.Object;
+	deep_fbl = new DeepFeedbackLearning(2, nNeuronsHidden, 2, 1, nFiltersInput, nFiltersHidden, 100, 200);
+
 	UE_LOG(LogTemp, Warning, TEXT("Constructing DFL_Vehicle!!"));
+
 
 }
 
